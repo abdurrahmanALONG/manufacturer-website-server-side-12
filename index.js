@@ -20,7 +20,8 @@ async function run() {
     try {
         await client.connect();
         const itemCollection = client.db('assignment-12').collection('tools');
-        // const explorCollection = client.db('assignment-11').collection('explor');
+        const explorCollection = client.db('assignment-12').collection('reviews');
+        const orderCollection = client.db('assignment-12').collection('orders');
 
 
 
@@ -41,6 +42,56 @@ async function run() {
                 const items = await cursor.toArray();
                 res.send(items);
             }
+        });
+
+        app.get('/tools/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            console.log(id);
+            const item = await itemCollection.findOne(query);
+            res.send(item);
+        });
+
+        app.get('/reviews', async (req, res) => {
+            const query = {};
+            const cursor = explorCollection.find(query);
+            const review = await cursor.toArray();
+            res.send(review);
+        });
+        app.get('/orders', async (req, res) => {
+            const query = {};
+            const cursor = orderCollection.find(query);
+            const review = await cursor.toArray();
+            res.send(review);
+        });
+
+
+        // POST
+        app.post('/reviews', async (req, res) => {
+            const newItem = req.body;
+            const result = await explorCollection.insertOne(newItem);
+            res.send(result);
+        });
+        app.post('/orders', async (req, res) => {
+            const newItem = req.body;
+            const order = await orderCollection.insertOne(newItem);
+            res.send(order);
+        });
+
+
+          // UPDATE
+          app.put('/tools/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatedQuantity = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    quantity: updatedQuantity.totalNewQuantity
+                }
+            };
+            const result = await itemCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
         });
 
     }
