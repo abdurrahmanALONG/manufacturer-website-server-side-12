@@ -40,6 +40,7 @@ async function run() {
         const explorCollection = client.db('assignment-12').collection('reviews');
         const orderCollection = client.db('assignment-12').collection('orders');
         const userCollection = client.db('assignment-12').collection('users');
+        const userDitailCollection = client.db('assignment-12').collection('userDital');
 
 
 
@@ -118,6 +119,11 @@ async function run() {
             const newItem = req.body;
             const order = await orderCollection.insertOne(newItem);
             res.send(order);
+        });
+        app.post('/userDital', async (req, res) => {
+            const newItem = req.body;
+            const result = await userDitailCollection.insertOne(newItem);
+            res.send(result);
         });
 
 
