@@ -63,14 +63,22 @@ async function run() {
             }
         });
         app.get('/orders', async (req, res) => {
-            // const email = req.query.email;
-            const query = {};
-            // const query = { email: email };
-            const cursor = orderCollection.find(query);
-            const items = await cursor.toArray();
-            res.send(items); 
+            const email = req.query.email;
+            console.log(email);
+            if (email) {
+                const query = { email: email };
+                const cursor = orderCollection.find(query);
+                const items = await cursor.toArray();
+                res.send(items);
+            }
+            else {
+                const query = {};
+                const cursor = orderCollection.find(query);
+                const items = await cursor.toArray();
+                res.send(items);
+            }
         });
-
+       
 
     app.get('/tools/:id', async (req, res) => {
         const id = req.params.id;
