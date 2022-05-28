@@ -16,6 +16,23 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).send({ message: 'UnAuthorized access' });
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
+      if (err) {
+        return res.status(403).send({ message: 'Forbidden access' })
+      }
+      req.decoded = decoded;
+      next();
+    });
+  }
+
+
+
 async function run() {
     try {
         await client.connect();
@@ -59,29 +76,37 @@ async function run() {
             const review = await cursor.toArray();
             res.send(review);
         });
-        app.get('/orders', async (req, res) => {
+        app.get('/orders', verifyJWT, async (req, res) => {
             const email = req.query.email;
-            console.log(email);
-            if (email) {
+            const decodedEmail =req.decoded.email;
+            if (email === decodedEmail) {
                 const query = { email: email };
                 const cursor = orderCollection.find(query);
                 const items = await cursor.toArray();
-                res.send(items);
+               return res.send(items);
             }
             else {
-                const query = {};
-                const cursor = orderCollection.find(query);
-                const items = await cursor.toArray();
-                res.send(items);
+
+                // const query = {};
+                // const cursor = orderCollection.find(query);
+                // const items = await cursor.toArray();
+                return res.status(403).send({ message: 'forbidden access' });
+               
             }
         });
-        // app.get('/orders', async (req, res) => {
-        //     const query = {};
-        //     const cursor = orderCollection.find(query);
-        //     const review = await cursor.toArray();
-        //     res.send(review);
-        // });
 
+        app.get('/users', async (req, res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users);
+          });
+
+          app.get('/admin/:email', async(req, res) =>{
+            const email = req.params.email;
+            const user = await userCollection.findOne({email: email});
+            const isAdmin = user.role === 'admin';
+            res.send({admin: isAdmin})
+          })
+        
 
         // POST
         app.post('/reviews', async (req, res) => {
@@ -111,6 +136,24 @@ async function run() {
             res.send(result);
         });
 
+        app.put('/users/admin/:email', verifyJWT, async (req, res) => {
+            const email = req.params.email;
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({ email: requester });
+            if (requesterAccount.role === 'admin') {
+              const filter = { email: email };
+              const updateDoc = {
+                $set: { role: 'admin' },
+              };
+              const result = await userCollection.updateOne(filter, updateDoc);
+              res.send(result);
+            }
+            // else{
+            //   res.status(403).send({message: 'forbidden'});
+            // }
+      
+          });
+
         app.put('/users/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body;
@@ -120,9 +163,8 @@ async function run() {
               $set: user,
             };
             const result = await userCollection.updateOne(filter, updateDoc, options);
-            // const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
-            // res.send({ result, token });
-            res.send(result);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ result, token });
           })
 
 
