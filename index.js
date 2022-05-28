@@ -22,6 +22,7 @@ async function run() {
         const itemCollection = client.db('assignment-12').collection('tools');
         const explorCollection = client.db('assignment-12').collection('reviews');
         const orderCollection = client.db('assignment-12').collection('orders');
+        const userCollection = client.db('assignment-12').collection('users');
 
 
 
@@ -109,6 +110,20 @@ async function run() {
             const result = await itemCollection.updateOne(filter, updatedDoc, options);
             res.send(result);
         });
+
+        app.put('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+              $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            // const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            // res.send({ result, token });
+            res.send(result);
+          })
 
 
         // DELETE
