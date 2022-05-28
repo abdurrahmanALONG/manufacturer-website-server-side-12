@@ -59,11 +59,27 @@ async function run() {
             res.send(review);
         });
         app.get('/orders', async (req, res) => {
-            const query = {};
-            const cursor = orderCollection.find(query);
-            const review = await cursor.toArray();
-            res.send(review);
+            const email = req.query.email;
+            console.log(email);
+            if (email) {
+                const query = { email: email };
+                const cursor = orderCollection.find(query);
+                const items = await cursor.toArray();
+                res.send(items);
+            }
+            else {
+                const query = {};
+                const cursor = orderCollection.find(query);
+                const items = await cursor.toArray();
+                res.send(items);
+            }
         });
+        // app.get('/orders', async (req, res) => {
+        //     const query = {};
+        //     const cursor = orderCollection.find(query);
+        //     const review = await cursor.toArray();
+        //     res.send(review);
+        // });
 
 
         // POST
@@ -91,6 +107,15 @@ async function run() {
                 }
             };
             const result = await itemCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        });
+
+
+        // DELETE
+        app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(query);
             res.send(result);
         });
 
