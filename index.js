@@ -112,6 +112,12 @@ async function run() {
 
         }
     });
+    app.get('/orders/:id', verifyJWT, async(req, res) =>{
+        const id = req.params.id;
+        const query = {_id: ObjectId(id)};
+        const booking = await orderCollection.findOne(query);
+        res.send(booking);
+      })
 
     app.get('/users', async (req, res) => {
         const users = await userCollection.find().toArray();
