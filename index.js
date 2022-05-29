@@ -127,6 +127,11 @@ async function run() {
 
 
     // POST
+    app.post('/tools', async (req, res) => {
+        const newItem = req.body;
+        const result = await itemCollection.insertOne(newItem);
+        res.send(result);
+    });
     app.post('/reviews', async (req, res) => {
         const newItem = req.body;
         const result = await explorCollection.insertOne(newItem);
